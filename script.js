@@ -291,6 +291,9 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
 
         // Instagram (Native Share)
         shareIg.onclick = async () => {
+            const originalText = shareIg.textContent;
+            shareIg.textContent = "Generating..."; // Loading state
+
             try {
                 // Generate Image
                 const file = await generateShareImage(idolImg, idolName, revealCount);
@@ -302,11 +305,16 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
                         title: 'K-Pop Idol Reveal',
                         text: shareText
                     });
+                    shareIg.textContent = originalText;
                     return; // Success!
                 }
                 throw new Error("Web Share API not supported or failed");
             } catch (err) {
+                // Debugging: Show error to user
+                alert("Sharing failed: " + err.message);
                 console.log("Sharing failed, trying fallback:", err);
+
+                shareIg.textContent = originalText;
 
                 // 2. Fallback: Mobile Deep Link
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
