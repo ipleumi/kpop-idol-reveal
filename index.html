@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Pop Idol Reveal</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>GUESS THE IDOL</h1>
+            <div class="score-container">
+                <span id="score-label">REVEALED</span>
+                <span id="score-value">0</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-area">
+                <div class="image-container">
+                    <img id="idol-image" src="" alt="Hidden Idol">
+                    <div class="grid-overlay" id="grid-overlay">
+                        <!-- Tiles will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-area">
+                <p class="instruction">Click tiles to reveal the image</p>
+                <div class="options-grid" id="options-grid">
+                    <!-- Options will be generated here -->
+                </div>
+            </div>
+        </main>
+
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="modal-title">CORRECT!</h2>
+                <p id="modal-message">It was Lisa!</p>
+
+                <div id="share-container" class="share-container hidden">
+                    <p class="share-text">Share your result:</p>
+                    <div class="share-buttons">
+                        <button id="share-x" class="share-btn x-btn">X</button>
+                        <button id="share-ig" class="share-btn ig-btn">IG</button>
+                        <button id="share-copy" class="share-btn copy-btn">Copy</button>
+                    </div>
+                </div>
+
+                <button id="next-btn" class="primary-btn">NEXT LEVEL</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
