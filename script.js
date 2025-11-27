@@ -289,9 +289,37 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
         };
 
-        // Instagram
-        shareIg.onclick = () => {
-            window.open('https://www.instagram.com/', '_blank');
+        // Instagram (Native Share)
+        shareIg.onclick = async () => {
+            try {
+                // Generate Image
+                const file = await generateShareImage(idolImg, idolName, revealCount);
+
+                // 1. Try Native Share with Generated Image
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'K-Pop Idol Reveal',
+                        text: shareText
+                    });
+                    return; // Success!
+                }
+                throw new Error("Web Share API not supported or failed");
+            } catch (err) {
+                console.log("Sharing failed, trying fallback:", err);
+
+                // 2. Fallback: Mobile Deep Link
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                    window.location.href = 'instagram://story-camera';
+                    setTimeout(() => {
+                        window.open('https://www.instagram.com/', '_blank');
+                    }, 2000);
+                } else {
+                    // 3. Fallback: Desktop Web
+                    window.open('https://www.instagram.com/', '_blank');
+                }
+            }
         };
 
         // Copy
@@ -302,7 +330,6 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
                 setTimeout(() => shareCopy.textContent = "Copy", 2000);
             });
         };
-
     } else {
         shareContainer.classList.add('hidden');
     }
@@ -321,6 +348,47 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
             loadNextLevel();
         };
     }
+}
+
+async function generateShareImage(imgElement, idolName, revealCount) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size (use image natural size, minimum 1080px width for quality)
+    const scale = Math.max(1, 1080 / imgElement.naturalWidth);
+    canvas.width = imgElement.naturalWidth * scale;
+    canvas.height = imgElement.naturalHeight * scale;
+
+    // Draw Image
+    ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+
+    // Add Gradient Overlay (Bottom)
+    const gradient = ctx.createLinearGradient(0, canvas.height * 0.5, 0, canvas.height);
+    gradient.addColorStop(0, 'transparent');
+    gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.8)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Text Settings
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+
+    // 1. "I guessed..."
+    ctx.font = `bold ${canvas.width * 0.08}px 'Outfit', sans-serif`;
+    ctx.fillText(`I guessed ${idolName}!`, canvas.width / 2, canvas.height * 0.75);
+
+    // 2. "in X reveals"
+    ctx.font = `${canvas.width * 0.05}px 'Outfit', sans-serif`;
+    ctx.fillStyle = '#00F0FF'; // Secondary color
+    ctx.fillText(`in ${revealCount} reveals`, canvas.width / 2, canvas.height * 0.82);
+
+    // 3. URL
+    ctx.font = `${canvas.width * 0.035}px 'Outfit', sans-serif`;
+    ctx.fillStyle = '#8b8b99'; // Text dim
+    ctx.fillText('ipleumi.github.io/kpop-idol-reveal', canvas.width / 2, canvas.height * 0.92);
+
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 }
 
 // Start
