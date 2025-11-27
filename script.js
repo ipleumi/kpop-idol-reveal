@@ -292,11 +292,12 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
         // Instagram (Native Share)
         shareIg.onclick = async () => {
             const originalText = shareIg.textContent;
-            shareIg.textContent = "Generating..."; // Loading state
+            shareIg.textContent = "Generating...";
+            let file;
 
             try {
                 // Generate Image
-                const file = await generateShareImage(idolImg, idolName, revealCount);
+                file = await generateShareImage(idolImg, idolName, revealCount);
 
                 // 1. Try Native Share with Generated Image
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -308,25 +309,44 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
                     shareIg.textContent = originalText;
                     return; // Success!
                 }
-                throw new Error("Web Share API not supported or failed");
+                throw new Error("Native sharing not supported");
             } catch (err) {
-                // Debugging: Show error to user
-                alert("Sharing failed: " + err.message);
                 console.log("Sharing failed, trying fallback:", err);
+
+                if (file) {
+                    // 2. Fallback: Download Image
+                    shareIg.textContent = "Saving...";
+                    try {
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(file);
+                        link.download = `kpop-reveal-${idolName}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        alert("I couldn't open Instagram directly, so I saved the Magic Card to your photos! 💾\n\nPlease upload it manually.");
+                    } catch (dlErr) {
+                        alert("Could not save image: " + dlErr.message);
+                    }
+                } else {
+                    alert("Could not generate image: " + err.message);
+                }
 
                 shareIg.textContent = originalText;
 
-                // 2. Fallback: Mobile Deep Link
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile) {
-                    window.location.href = 'instagram://story-camera';
-                    setTimeout(() => {
+                // 3. Open Instagram (Delayed)
+                setTimeout(() => {
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile) {
+                        window.location.href = 'instagram://story-camera';
+                        // Fallback to web if app fails
+                        setTimeout(() => {
+                            window.open('https://www.instagram.com/', '_blank');
+                        }, 2000);
+                    } else {
                         window.open('https://www.instagram.com/', '_blank');
-                    }, 2000);
-                } else {
-                    // 3. Fallback: Desktop Web
-                    window.open('https://www.instagram.com/', '_blank');
-                }
+                    }
+                }, 1500);
             }
         };
 
