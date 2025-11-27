@@ -324,7 +324,7 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
                         link.click();
                         document.body.removeChild(link);
 
-                        alert("I couldn't open Instagram directly, so I saved the Magic Card to your photos! 💾\n\nPlease upload it manually.");
+                        alert("Saved the Magic Card to your photos! 💾\n\nClick OK to open Instagram, then please select the photo from your gallery.");
                     } catch (dlErr) {
                         alert("Could not save image: " + dlErr.message);
                     }
@@ -334,19 +334,17 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
 
                 shareIg.textContent = originalText;
 
-                // 3. Open Instagram (Delayed)
-                setTimeout(() => {
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    if (isMobile) {
-                        window.location.href = 'instagram://story-camera';
-                        // Fallback to web if app fails
-                        setTimeout(() => {
-                            window.open('https://www.instagram.com/', '_blank');
-                        }, 2000);
-                    } else {
+                // 3. Open Instagram (Immediately after alert closes)
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                    window.location.href = 'instagram://story-camera';
+                    // Fallback to web if app fails
+                    setTimeout(() => {
                         window.open('https://www.instagram.com/', '_blank');
-                    }
-                }, 1500);
+                    }, 2000);
+                } else {
+                    window.open('https://www.instagram.com/', '_blank');
+                }
             }
         };
 
