@@ -136,18 +136,22 @@ const GAME_DATA = [
     }
 ];
 
+// State
 let currentState = {
     revealCount: 0,
     currentIdol: null,
     revealedTiles: 0,
     isGameOver: false,
-    isFirstReveal: true,
     wrongGuesses: 0,
-    levelOrder: [],
     currentLevelIndex: 0
 };
 
 // DOM Elements
+const startScreen = document.getElementById('start-screen');
+const levelSelectScreen = document.getElementById('level-select-screen');
+const gameContainer = document.getElementById('game-container');
+const levelsGrid = document.getElementById('levels-grid');
+
 const scoreEl = document.getElementById('score-value');
 const idolImg = document.getElementById('idol-image');
 const gridOverlay = document.getElementById('grid-overlay');
@@ -161,46 +165,69 @@ const shareX = document.getElementById('share-x');
 const shareIg = document.getElementById('share-ig');
 const shareCopy = document.getElementById('share-copy');
 
+// Buttons
+const startBtn = document.getElementById('start-btn');
+const backToStartBtn = document.getElementById('back-to-start-btn');
+const backToMenuBtn = document.getElementById('back-to-menu-btn');
+
 // Constants
 const GRID_SIZE = 49; // 7x7
 const MAX_WRONG_GUESSES = 3;
 
-function initGame() {
-    // Generate random order of levels
-    currentState.levelOrder = [...Array(GAME_DATA.length).keys()].sort(() => Math.random() - 0.5);
-    currentState.currentLevelIndex = 0;
+// --- Initialization ---
+function init() {
+    startBtn.onclick = showLevelSelect;
+    backToStartBtn.onclick = showStartScreen;
+    backToMenuBtn.onclick = showLevelSelect;
 
-    loadNextLevel();
+    generateLevelButtons();
 }
 
-function updateStats() {
-    scoreEl.textContent = currentState.revealCount;
-    // Animate change
-    scoreEl.style.transform = "scale(1.2)";
-    setTimeout(() => scoreEl.style.transform = "scale(1)", 200);
+// --- Navigation ---
+function showStartScreen() {
+    startScreen.classList.remove('hidden');
+    levelSelectScreen.classList.add('hidden');
+    gameContainer.classList.add('hidden');
+    modal.classList.add('hidden');
 }
 
-function loadNextLevel() {
-    // Check if all levels completed
-    if (currentState.currentLevelIndex >= currentState.levelOrder.length) {
-        showModal("CONGRATULATIONS!", "You have completed all levels!", true);
-        return;
-    }
+function showLevelSelect() {
+    startScreen.classList.add('hidden');
+    levelSelectScreen.classList.remove('hidden');
+    gameContainer.classList.add('hidden');
+    modal.classList.add('hidden');
+}
 
-    // Reset State for new round
-    currentState.revealCount = 0;
-    currentState.isFirstReveal = true;
-    currentState.wrongGuesses = 0;
-    updateStats();
+function showGame() {
+    startScreen.classList.add('hidden');
+    levelSelectScreen.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+}
 
-    // Get current level data based on shuffled order
-    const dataIndex = currentState.levelOrder[currentState.currentLevelIndex];
-    const levelData = GAME_DATA[dataIndex];
+// --- Level Selection ---
+function generateLevelButtons() {
+    levelsGrid.innerHTML = '';
+    GAME_DATA.forEach((level, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'level-btn';
+        btn.textContent = index + 1;
+        btn.onclick = () => loadLevel(index);
+        levelsGrid.appendChild(btn);
+    });
+}
+
+// --- Game Logic ---
+function loadLevel(index) {
+    currentState.currentLevelIndex = index;
+    const levelData = GAME_DATA[index];
     currentState.currentIdol = levelData;
 
     // Reset State
+    currentState.revealCount = 0;
     currentState.revealedTiles = 0;
     currentState.isGameOver = false;
+    currentState.wrongGuesses = 0;
+    updateStats();
 
     // Set Image
     idolImg.src = levelData.image;
@@ -215,13 +242,9 @@ function loadNextLevel() {
         gridOverlay.appendChild(tile);
     }
 
-    // Generate Options from Data
+    // Generate Options
     optionsGrid.innerHTML = '';
-
-    // Clone options to avoid modifying original data
-    const options = [...levelData.options];
-    // Shuffle options
-    options.sort(() => Math.random() - 0.5);
+    const options = [...levelData.options].sort(() => Math.random() - 0.5);
 
     options.forEach(opt => {
         const btn = document.createElement('button');
@@ -230,11 +253,18 @@ function loadNextLevel() {
         btn.onclick = () => handleOptionClick(btn, opt, levelData.name);
         optionsGrid.appendChild(btn);
     });
+
+    showGame();
+}
+
+function updateStats() {
+    scoreEl.textContent = currentState.revealCount;
+    scoreEl.style.transform = "scale(1.2)";
+    setTimeout(() => scoreEl.style.transform = "scale(1)", 200);
 }
 
 function handleTileClick(tile) {
     if (currentState.isGameOver || tile.classList.contains('revealed')) return;
-
     tile.classList.add('revealed');
     currentState.revealCount++;
     updateStats();
@@ -258,7 +288,7 @@ function handleOptionClick(btn, selected, correct) {
         currentState.wrongGuesses++;
 
         if (currentState.wrongGuesses >= MAX_WRONG_GUESSES) {
-            // Game Over (Round Failed)
+            // Game Over
             currentState.isGameOver = true;
             revealAllTiles();
             setTimeout(() => {
@@ -282,39 +312,30 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
     if (title === "CORRECT!" && idolName) {
         shareContainer.classList.remove('hidden');
         const shareText = `I guessed ${idolName} in ${revealCount} reveals! Can you beat me? #KPopRevealGame`;
-        const shareUrl = window.location.href; // Or your game URL
+        const shareUrl = window.location.href;
 
         // X (Twitter)
         shareX.onclick = () => {
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
         };
 
-        // Instagram (Native Share)
+        // Instagram
         shareIg.onclick = async () => {
             const originalText = shareIg.textContent;
             shareIg.textContent = "Generating...";
             let file;
 
             try {
-                // Generate Image
                 file = await generateShareImage(idolImg, idolName, revealCount);
-
-                // 1. Try Native Share with Generated Image
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'K-Pop Idol Reveal',
-                        text: shareText
-                    });
+                    await navigator.share({ files: [file], title: 'K-Pop Idol Reveal', text: shareText });
                     shareIg.textContent = originalText;
-                    return; // Success!
+                    return;
                 }
                 throw new Error("Native sharing not supported");
             } catch (err) {
-                console.log("Sharing failed, trying fallback:", err);
-
+                console.log("Sharing failed:", err);
                 if (file) {
-                    // 2. Fallback: Download Image
                     shareIg.textContent = "Saving...";
                     try {
                         const link = document.createElement('a');
@@ -323,7 +344,6 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-
                         alert("Saved the Magic Card to your photos! 💾\n\nClick OK to open Instagram, then please select the photo from your gallery.");
                     } catch (dlErr) {
                         alert("Could not save image: " + dlErr.message);
@@ -331,17 +351,13 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
                 } else {
                     alert("Could not generate image: " + err.message);
                 }
-
                 shareIg.textContent = originalText;
 
-                // 3. Open Instagram (Immediately after alert closes)
+                // Open Instagram
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 if (isMobile) {
                     window.location.href = 'instagram://story-camera';
-                    // Fallback to web if app fails
-                    setTimeout(() => {
-                        window.open('https://www.instagram.com/', '_blank');
-                    }, 2000);
+                    setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 2000);
                 } else {
                     window.open('https://www.instagram.com/', '_blank');
                 }
@@ -360,18 +376,23 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
         shareContainer.classList.add('hidden');
     }
 
-    if (isGameComplete) {
-        nextBtn.textContent = "PLAY AGAIN";
+    // Next Button Logic
+    if (title === "CORRECT!") {
+        nextBtn.textContent = "NEXT LEVEL";
         nextBtn.onclick = () => {
+            // Go to next level if available, else back to menu
+            if (currentState.currentLevelIndex < GAME_DATA.length - 1) {
+                loadLevel(currentState.currentLevelIndex + 1);
+            } else {
+                showLevelSelect();
+            }
             modal.classList.add('hidden');
-            initGame();
         };
     } else {
-        nextBtn.textContent = "NEXT IDOL";
+        nextBtn.textContent = "TRY AGAIN";
         nextBtn.onclick = () => {
+            loadLevel(currentState.currentLevelIndex);
             modal.classList.add('hidden');
-            currentState.currentLevelIndex++;
-            loadNextLevel();
         };
     }
 }
@@ -379,16 +400,12 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
 async function generateShareImage(imgElement, idolName, revealCount) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-
-    // Set canvas size (use image natural size, minimum 1080px width for quality)
     const scale = Math.max(1, 1080 / imgElement.naturalWidth);
     canvas.width = imgElement.naturalWidth * scale;
     canvas.height = imgElement.naturalHeight * scale;
 
-    // Draw Image
     ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
 
-    // Add Gradient Overlay (Bottom)
     const gradient = ctx.createLinearGradient(0, canvas.height * 0.5, 0, canvas.height);
     gradient.addColorStop(0, 'transparent');
     gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.8)');
@@ -396,26 +413,21 @@ async function generateShareImage(imgElement, idolName, revealCount) {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Text Settings
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffffff';
-
-    // 1. "I guessed..."
     ctx.font = `bold ${canvas.width * 0.08}px 'Outfit', sans-serif`;
     ctx.fillText(`I guessed ${idolName}!`, canvas.width / 2, canvas.height * 0.75);
 
-    // 2. "in X reveals"
     ctx.font = `${canvas.width * 0.05}px 'Outfit', sans-serif`;
-    ctx.fillStyle = '#00F0FF'; // Secondary color
+    ctx.fillStyle = '#00F0FF';
     ctx.fillText(`in ${revealCount} reveals`, canvas.width / 2, canvas.height * 0.82);
 
-    // 3. URL
     ctx.font = `${canvas.width * 0.035}px 'Outfit', sans-serif`;
-    ctx.fillStyle = '#8b8b99'; // Text dim
+    ctx.fillStyle = '#8b8b99';
     ctx.fillText('ipleumi.github.io/kpop-idol-reveal', canvas.width / 2, canvas.height * 0.92);
 
     return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 }
 
 // Start
-initGame();
+init();

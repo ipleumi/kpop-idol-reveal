@@ -448,31 +448,6 @@ main {
     width: 100%;
     transition: opacity 0.2s;
 }
-
-.primary-btn:hover {
-    opacity: 0.9;
-}
-
-/* Share Buttons */
-.share-container {
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.share-container.hidden {
-    display: none;
-}
-
-.share-text {
-    color: var(--text-dim);
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-}
-
-.share-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
 }
 
 .share-btn {
