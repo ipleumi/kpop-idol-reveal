@@ -463,35 +463,50 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
 }
 
 async function generateShareImage(imgElement, idolName, revealCount) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const scale = Math.max(1, 1080 / imgElement.naturalWidth);
-    canvas.width = imgElement.naturalWidth * scale;
-    canvas.height = imgElement.naturalHeight * scale;
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const scale = Math.max(1, 1080 / img.naturalWidth);
+                canvas.width = img.naturalWidth * scale;
+                canvas.height = img.naturalHeight * scale;
 
-    ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    const gradient = ctx.createLinearGradient(0, canvas.height * 0.5, 0, canvas.height);
-    gradient.addColorStop(0, 'transparent');
-    gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.8)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const gradient = ctx.createLinearGradient(0, canvas.height * 0.5, 0, canvas.height);
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.8)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${canvas.width * 0.08}px 'Outfit', sans-serif`;
-    ctx.fillText(`I guessed ${idolName}!`, canvas.width / 2, canvas.height * 0.75);
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${canvas.width * 0.08}px 'Outfit', sans-serif`;
+                ctx.fillText(`I guessed ${idolName}!`, canvas.width / 2, canvas.height * 0.75);
 
-    ctx.font = `${canvas.width * 0.05}px 'Outfit', sans-serif`;
-    ctx.fillStyle = '#00F0FF';
-    ctx.fillText(`in ${revealCount} reveals`, canvas.width / 2, canvas.height * 0.82);
+                ctx.font = `${canvas.width * 0.05}px 'Outfit', sans-serif`;
+                ctx.fillStyle = '#00F0FF';
+                ctx.fillText(`in ${revealCount} reveals`, canvas.width / 2, canvas.height * 0.82);
 
-    ctx.font = `${canvas.width * 0.035}px 'Outfit', sans-serif`;
-    ctx.fillStyle = '#8b8b99';
-    ctx.fillText('ipleumi.github.io/kpop-idol-reveal', canvas.width / 2, canvas.height * 0.92);
+                ctx.font = `${canvas.width * 0.035}px 'Outfit', sans-serif`;
+                ctx.fillStyle = '#8b8b99';
+                ctx.fillText('ipleumi.github.io/kpop-idol-reveal', canvas.width / 2, canvas.height * 0.92);
 
-    return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                canvas.toBlob(blob => {
+                    if (blob) resolve(blob);
+                    else reject(new Error("Canvas toBlob failed"));
+                }, 'image/jpeg', 0.9);
+            } catch (e) {
+                reject(e);
+            }
+        };
+        img.onerror = reject;
+        img.src = imgElement.src;
+    });
 }
 
 // Start
