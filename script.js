@@ -133,6 +133,51 @@ const GAME_DATA = [
         name: "Pharita",
         image: "picture/Pharita.webp",
         options: ["Pharita", "Rami", "Rora", "Chiquita"]
+    },
+    {
+        name: "Chaewon",
+        image: "picture/Chaewon.webp",
+        options: ["Chaewon", "Sakura", "Yunjin", "Eunchae"]
+    },
+    {
+        name: "Felix",
+        image: "picture/Felix.jpg",
+        options: ["Felix", "Hyunjin", "Bang Chan", "Lee Know"]
+    },
+    {
+        name: "Hitomi",
+        image: "picture/Hitomi.jpg",
+        options: ["Hitomi", "Nako", "Sakura", "Wonyoung"]
+    },
+    {
+        name: "Kazuha",
+        image: "picture/Kazuha.jpg",
+        options: ["Kazuha", "Chaewon", "Sakura", "Eunchae"]
+    },
+    {
+        name: "Lee Know",
+        image: "picture/Leeknow.jpg",
+        options: ["Lee Know", "Felix", "Han", "Seungmin"]
+    },
+    {
+        name: "NingNing",
+        image: "picture/NingNing.jpg",
+        options: ["NingNing", "Karina", "Winter", "Giselle"]
+    },
+    {
+        name: "Yena",
+        image: "picture/Yena.jpeg",
+        options: ["Yena", "Yuri", "Chaewon", "Eunbi"]
+    },
+    {
+        name: "Leeseo",
+        image: "picture/leeseo-ive.jpg",
+        options: ["Leeseo", "Wonyoung", "Yujin", "Liz"]
+    },
+    {
+        name: "Rami",
+        image: "picture/rami.jpg",
+        options: ["Rami", "Pharita", "Rora", "Ahyeon"]
     }
 ];
 
