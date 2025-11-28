@@ -143,7 +143,8 @@ let currentState = {
     revealedTiles: 0,
     isGameOver: false,
     wrongGuesses: 0,
-    currentLevelIndex: 0
+    currentLevelIndex: 0,
+    completedLevels: JSON.parse(localStorage.getItem('completedLevels')) || []
 };
 
 // DOM Elements
@@ -196,6 +197,7 @@ function showLevelSelect() {
     levelSelectScreen.classList.remove('hidden');
     gameContainer.classList.add('hidden');
     modal.classList.add('hidden');
+    generateLevelButtons(); // Regenerate to update completed status
 }
 
 function showGame() {
@@ -210,10 +212,21 @@ function generateLevelButtons() {
     GAME_DATA.forEach((level, index) => {
         const btn = document.createElement('button');
         btn.className = 'level-btn';
-        btn.textContent = index + 1;
+        if (currentState.completedLevels.includes(index)) {
+            btn.classList.add('completed');
+            btn.textContent = "✓ " + (index + 1);
+        } else {
+            btn.textContent = index + 1;
+        }
         btn.onclick = () => loadLevel(index);
         levelsGrid.appendChild(btn);
     });
+
+    // Add "Waiting for update..." placeholder
+    const placeholder = document.createElement('div');
+    placeholder.className = 'level-placeholder';
+    placeholder.textContent = "Waiting for update...";
+    levelsGrid.appendChild(placeholder);
 }
 
 // --- Game Logic ---
@@ -278,6 +291,13 @@ function handleOptionClick(btn, selected, correct) {
         currentState.isGameOver = true;
         btn.classList.add('correct');
         revealAllTiles();
+
+        // Save Progress
+        if (!currentState.completedLevels.includes(currentState.currentLevelIndex)) {
+            currentState.completedLevels.push(currentState.currentLevelIndex);
+            localStorage.setItem('completedLevels', JSON.stringify(currentState.completedLevels));
+        }
+
         setTimeout(() => {
             showModal("CORRECT!", `It was ${correct}! Tiles Revealed: ${currentState.revealCount}`, false, correct, currentState.revealCount);
         }, 1000);
@@ -378,7 +398,7 @@ function showModal(title, message, isGameComplete = false, idolName = null, reve
 
     // Next Button Logic
     if (title === "CORRECT!") {
-        nextBtn.textContent = "NEXT LEVEL";
+        nextBtn.textContent = "NEXT IDOL"; // Changed from NEXT LEVEL
         nextBtn.onclick = () => {
             // Go to next level if available, else back to menu
             if (currentState.currentLevelIndex < GAME_DATA.length - 1) {

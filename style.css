@@ -97,21 +97,6 @@ body {
     border-radius: 12px;
     color: white;
     font-family: var(--font-main);
-    font-size: 1.2rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.level-btn:hover {
-    background: rgba(0, 240, 255, 0.2);
-    border-color: var(--secondary);
-    transform: scale(1.05);
-}
-
-/* --- Game Container --- */
-.game-container {
-    width: 100%;
     max-width: 500px;
     display: flex;
     flex-direction: column;
